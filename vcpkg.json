@@ -1,0 +1,14 @@
+{
+    "name":  "modernstaggerlock",
+    "version-string":  "1.0.0",
+    "description":  "Modern Stagger Lock",
+    "license":  "MIT",
+    "dependencies":  [
+                         "spdlog"
+                     ],
+    "features":  {
+                     "mo2-install":  {
+                                         "description":  "ModernStaggerLock"
+                                     }
+                 }
+}
