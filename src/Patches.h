@@ -18,7 +18,7 @@ namespace ModernStaggerLock
 		static void Install()
 		{
 			const auto funcAddr = REL::ID(FuncID).address();
-			DKUtil::Hook::WriteData(funcAddr + Offset, &StaggeredCheckNop, sizeof(StaggeredCheckNop));
+			DKUtil::Hook::WriteData(funcAddr + Offset, &StaggeredCheckNop, sizeof(StaggeredCheckNop), false);
 			INFO("{} Done!", __FUNCTION__);
 		}
 
