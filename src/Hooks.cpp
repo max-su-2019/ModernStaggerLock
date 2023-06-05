@@ -10,10 +10,10 @@ namespace ModernStaggerLock
 				float staggerDirection = 0.f, staggerMagnitude = 0.f;
 
 				actorRef->GetGraphVariableFloat("staggerDirection", staggerDirection);
-				actorRef->SetGraphVariableInt("msl_staggerDirection", std::clamp(std::int32_t(floor(staggerDirection * 4.f)), 0, 3));
+				actorRef->SetGraphVariableInt("msl_staggerDirection", staggerDirection < 0.25f || staggerDirection > 0.75 ? 0 : 1);
 
 				actorRef->GetGraphVariableFloat("staggerMagnitude", staggerMagnitude);
-				actorRef->SetGraphVariableInt("msl_staggerLevel", std::clamp(std::int32_t(floor(staggerMagnitude * 4.f)), 0, 4));
+				actorRef->SetGraphVariableInt("msl_staggerLevel", std::clamp(std::int32_t(floor(staggerMagnitude * 4.f)), 1, 4));
 			}
 		}
 
