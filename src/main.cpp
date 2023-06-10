@@ -42,5 +42,7 @@ DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 	ModernStaggerLock::NotifyAnimationGraphHook::CharacterEx::InstallHook();
 	ModernStaggerLock::NotifyAnimationGraphHook::PlayerEx::InstallHook();
 
+	ModernStaggerLock::DisableStaggerJumpHook::InstallHook();
+
 	return true;
 }

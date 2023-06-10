@@ -66,4 +66,31 @@ namespace ModernStaggerLock
 		~NotifyAnimationGraphHook() = delete;
 	};
 
+	class DisableStaggerJumpHook : public RE::JumpHandler
+	{
+	public:
+		static void InstallHook()
+		{
+			REL::Relocation<std::uintptr_t> JumpHandlerVtbl{ VTABLE[0] };
+			func = JumpHandlerVtbl.write_vfunc(0x1, &Hook_CanProcess);
+			INFO("Hook DisableStaggerJumpHook!");
+		}
+
+	private:
+		static bool Hook_CanProcess(RE::JumpHandler* a_handler, RE::InputEvent* a_event)
+		{
+			auto result = func(a_handler, a_event);
+			if (result) {
+				auto playerRef = RE::PlayerCharacter::GetSingleton();
+				if (playerRef && playerRef->IsStaggering()) {
+					return false;
+				}
+			}
+
+			return result;
+		}
+
+		static inline REL::Relocation<decltype(&RE::JumpHandler::CanProcess)> func;
+	};
+
 }
