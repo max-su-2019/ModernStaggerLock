@@ -2,21 +2,68 @@
 
 namespace ModernStaggerLock
 {
-	class PeformStagggerHook
+	class NotifyAnimationGraphHook
 	{
 	public:
-		static void Hook()
+		class CharacterEx : public RE::Character
 		{
-			REL::Relocation<uintptr_t> hook{ REL::ID(36700) };  //1405FA1B0		1.5.97
-			auto& trampoline = SKSE::GetTrampoline();
-			SKSE::AllocTrampoline(1 << 4);
-			_PerformActionImp = trampoline.write_call<5>(hook.address() + 0X1E6, PerformActionImp);
+		public:
+			static void InstallHook()
+			{
+				REL::Relocation<std::uintptr_t> CharacterVtbl{ VTABLE[3] };
+				func = CharacterVtbl.write_vfunc(0x1, &Hook_NotifyAnimationGraph);
+				INFO("Hook NPC NotifyAnimationGraph!");
+			}
+
+		private:
+			static bool Hook_NotifyAnimationGraph(RE::IAnimationGraphManagerHolder* a_graphMgr, const RE::BSFixedString& a_eventName)
+			{
+				if (ProcessStaggerHanlder(a_graphMgr, a_eventName)) {
+					//
+				} else if (ShouldQuickRecovery(a_graphMgr, a_eventName)) {
+					func(a_graphMgr, "StaggerStop");
+				}
+
+				return func(a_graphMgr, a_eventName);
+			}
+
+			static inline REL::Relocation<decltype(&RE::Character::NotifyAnimationGraph)> func;
 		};
 
-	private:
-		static std::int32_t PerformActionImp(RE::TESActionData* a_action, float a2);
+		class PlayerEx : public RE::PlayerCharacter
+		{
+		public:
+			static void InstallHook()
+			{
+				REL::Relocation<std::uintptr_t> PlayerCharacterVtbl{ VTABLE[3] };
+				func = PlayerCharacterVtbl.write_vfunc(0x1, &Hook_NotifyAnimationGraph);
+				INFO("Hook PC NotifyAnimationGraph!");
+			}
 
-		static inline REL::Relocation<decltype(PerformActionImp)> _PerformActionImp;
+		private:
+			static bool Hook_NotifyAnimationGraph(RE::IAnimationGraphManagerHolder* a_graphMgr, const RE::BSFixedString& a_eventName)
+			{
+				if (ProcessStaggerHanlder(a_graphMgr, a_eventName)) {
+					//
+				} else if (ShouldQuickRecovery(a_graphMgr, a_eventName)) {
+					func(a_graphMgr, "StaggerStop");
+				}
+
+				return func(a_graphMgr, a_eventName);
+			}
+
+			static inline REL::Relocation<decltype(&RE::PlayerCharacter::NotifyAnimationGraph)> func;
+		};
+
+		friend class CharacterEx;
+		friend class PlayerEx;
+
+	private:
+		static bool ProcessStaggerHanlder(RE::IAnimationGraphManagerHolder* a_graphMgr, const RE::BSFixedString& a_eventName);
+		static bool ShouldQuickRecovery(RE::IAnimationGraphManagerHolder* a_graphMgr, const RE::BSFixedString& a_eventName);
+
+		NotifyAnimationGraphHook() = delete;
+		~NotifyAnimationGraphHook() = delete;
 	};
 
 }
