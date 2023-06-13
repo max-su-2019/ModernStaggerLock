@@ -1,10 +1,13 @@
 #include "Hooks.h"
+#include "Settings.h"
 
 namespace ModernStaggerLock
 {
 
 	bool NotifyAnimationGraphHook::ProcessStaggerHanlder(RE::IAnimationGraphManagerHolder* a_graphMgr, const RE::BSFixedString& a_eventName)
 	{
+		using StaggerType = MSLSettings::StaggerType;
+
 		auto actorRef = a_graphMgr ? skyrim_cast<RE::Actor*>(a_graphMgr) : nullptr;
 		if (!actorRef)
 			return false;
@@ -16,7 +19,26 @@ namespace ModernStaggerLock
 			actorRef->SetGraphVariableInt("msl_staggerDirection", staggerDirection < 0.25f || staggerDirection > 0.75 ? 0 : 1);
 
 			actorRef->GetGraphVariableFloat("staggerMagnitude", staggerMagnitude);
-			actorRef->SetGraphVariableInt("msl_staggerLevel", std::clamp(std::int32_t(floor(staggerMagnitude * 4.f)), 1, 4));
+
+			auto GetStaggerLevel = [](const float staggerMagnitude) -> std::int32_t {
+				auto mslSetting = MSLSettings::GetSingleton();
+				const float StaggerLevelRange[StaggerType::kTotal] = {
+					*mslSetting->SmallStaggerMagnitude,
+					*mslSetting->MediumStaggerMagnitude,
+					*mslSetting->LargeStaggerMagnitude,
+					*mslSetting->LargestStaggerMagnitude
+				};
+
+				for (std::int32_t i = StaggerType::kLargest; i >= StaggerType::kSmall; i--) {
+					if (staggerMagnitude >= StaggerLevelRange[i]) {
+						return i + 1;
+					}
+				}
+
+				return 1;
+			};
+
+			actorRef->SetGraphVariableInt("msl_staggerLevel", GetStaggerLevel(staggerMagnitude));
 
 			return true;
 		}

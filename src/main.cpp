@@ -1,5 +1,4 @@
-#include "Hooks.h"
-#include "Patches.h"
+#include "LoadGame.h"
 
 DLLEXPORT constinit auto SKSEPlugin_Version = []() noexcept {
 	SKSE::PluginVersionData data{};
@@ -37,12 +36,13 @@ DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 	INFO("{} v{} loaded", Plugin::NAME, Plugin::Version);
 
 	// do stuff
-	ModernStaggerLock::StaggeredStateCheckPatch::Install();
+	auto g_message = SKSE::GetMessagingInterface();
+	if (!g_message) {
+		ERROR("Messaging Interface Not Found!");
+		return false;
+	}
 
-	ModernStaggerLock::NotifyAnimationGraphHook::CharacterEx::InstallHook();
-	ModernStaggerLock::NotifyAnimationGraphHook::PlayerEx::InstallHook();
-
-	ModernStaggerLock::DisableStaggerJumpHook::InstallHook();
+	g_message->RegisterListener(ModernStaggerLock::EventCallback);
 
 	return true;
 }
