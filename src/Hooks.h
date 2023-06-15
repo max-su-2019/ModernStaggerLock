@@ -77,18 +77,7 @@ namespace ModernStaggerLock
 		}
 
 	private:
-		static bool Hook_CanProcess(RE::JumpHandler* a_handler, RE::InputEvent* a_event)
-		{
-			auto result = func(a_handler, a_event);
-			if (result) {
-				auto playerRef = RE::PlayerCharacter::GetSingleton();
-				if (playerRef && playerRef->IsStaggering()) {
-					return false;
-				}
-			}
-
-			return result;
-		}
+		static bool Hook_CanProcess(RE::JumpHandler* a_handler, RE::InputEvent* a_event);
 
 		static inline REL::Relocation<decltype(&RE::JumpHandler::CanProcess)> func;
 	};

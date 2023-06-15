@@ -20,6 +20,8 @@ namespace ModernStaggerLock
 		}
 
 	public:
+		Boolean DisableJumpWhenStagger{ "DisableJumpWhenStagger", "Control" };
+
 		Double SmallStaggerMagnitude{ "SmallStaggerMagnitude", "StaggerLevel" };
 		Double MediumStaggerMagnitude{ "MediumStaggerMagnitude", "StaggerLevel" };
 		Double LargeStaggerMagnitude{ "LargeStaggerMagnitude", "StaggerLevel" };
@@ -33,5 +35,7 @@ namespace ModernStaggerLock
 			kLargest,
 			kTotal
 		};
+
+		std::vector<std::string> quickRecoveryEvents;
 	};
 }

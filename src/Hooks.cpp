@@ -52,22 +52,29 @@ namespace ModernStaggerLock
 		if (!actorRef || !actorRef->IsStaggering())
 			return false;
 
-		const std::vector<std::string> QuickRecovEvents{
-			"TKDodgeForward",
-			"TKDodgeLeft",
-			"TKDodgeBack",
-			"TKDodgeRight",
-			"Dodge"
-		};
-
 		bool shouldQuickRecovery = false;
 		if (actorRef->GetGraphVariableBool("MSL_IsStaggerRecovery", shouldQuickRecovery) && shouldQuickRecovery) {
-			for (const auto& recovEvent : QuickRecovEvents) {
+			auto settings = MSLSettings::GetSingleton();
+			for (const auto& recovEvent : settings->quickRecoveryEvents) {
 				if (_strcmpi(recovEvent.c_str(), a_eventName.c_str()) == 0)
 					return true;
 			}
 		}
 
 		return false;
+	}
+
+	bool DisableStaggerJumpHook::Hook_CanProcess(RE::JumpHandler* a_handler, RE::InputEvent* a_event)
+	{
+		auto result = func(a_handler, a_event);
+		if (result) {
+			auto playerRef = RE::PlayerCharacter::GetSingleton();
+			auto settings = MSLSettings::GetSingleton();
+			if (playerRef && playerRef->IsStaggering() && *settings->DisableJumpWhenStagger) {
+				return false;
+			}
+		}
+
+		return result;
 	}
 }
