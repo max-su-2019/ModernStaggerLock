@@ -13,7 +13,7 @@ include(GNUInstallDirs)
 # info
 project(
 	ModernStaggerLock
-	VERSION 1.0.7
+	VERSION 1.1.3
 	LANGUAGES CXX
 )
 
@@ -87,7 +87,7 @@ target_link_libraries(
 
 # compiler def
 if (MSVC)
-	add_compile_definitions(_UNICODE)
+	add_compile_definitions(_MBCS)
 
 	target_compile_options(
 		${PROJECT_NAME}
