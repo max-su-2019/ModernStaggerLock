@@ -60,8 +60,7 @@ namespace ModernStaggerLock
 
 		bool shouldQuickRecovery = false;
 		if (actorRef->GetGraphVariableBool("MSL_IsStaggerRecovery", shouldQuickRecovery) && shouldQuickRecovery) {
-			auto settings = MSLSettings::GetSingleton();
-			for (const auto& recovEvent : settings->quickRecoveryEvents) {
+			for (const auto& recovEvent : MSLSettings::quickRecoveryEvents) {
 				if (_strcmpi(recovEvent.c_str(), a_eventName.c_str()) == 0)
 					return true;
 			}
@@ -82,22 +81,6 @@ namespace ModernStaggerLock
 		}
 
 		return result;
-	}
-
-	void ActorUpdateHook::CharacterEx::Hook_Update(float a_delta)
-	{
-		auto specialStaggerHandler = SpecialStaggerHandler::GetSingleton();
-		specialStaggerHandler->EraseStaggerDataFromMap(this);
-
-		func(this, a_delta);
-	}
-
-	void ActorUpdateHook::PlayerEx::Hook_Update(float a_delta)
-	{
-		auto specialStaggerHandler = SpecialStaggerHandler::GetSingleton();
-		specialStaggerHandler->EraseStaggerDataFromMap(this);
-
-		func(this, a_delta);
 	}
 
 	constexpr uint32_t HashToUInt(const char* data, size_t const size) noexcept

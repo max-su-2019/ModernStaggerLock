@@ -13,7 +13,7 @@ include(GNUInstallDirs)
 # info
 project(
 	ModernStaggerLock
-	VERSION 1.1.3
+	VERSION 1.1.5
 	LANGUAGES CXX
 )
 

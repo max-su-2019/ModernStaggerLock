@@ -1,17 +1,8 @@
 #include "Conditions.h"
-#include "Utils.h"
+#include "SpecialStaggerHandler.h"
 
 namespace ModernStaggerLock
 {
-	constexpr int32_t HashToInt(const char* data, size_t const size) noexcept
-	{
-		int32_t hash = 5381;
-
-		for (const char* c = data; c < data + size; ++c)
-			hash = ((hash << 5) + hash) + charToLower(*c);
-
-		return hash;
-	}
 
 	GetSpeicalStaggerNameCondition::GetSpeicalStaggerNameCondition()
 	{
@@ -25,7 +16,7 @@ namespace ModernStaggerLock
 		std::int32_t curSpecialStaggerId = 0;
 		if (a_refr && a_refr->GetGraphVariableInt("msl_specialStaggerId", curSpecialStaggerId) && curSpecialStaggerId) {
 			const auto textArgument = textComponent->GetTextValue();
-			if (HashToInt(textArgument.data(), textArgument.size()) == curSpecialStaggerId) {
+			if (HashSpecialStaggerID(textArgument.data(), textArgument.size()) == curSpecialStaggerId) {
 				return true;
 			}
 		}
@@ -36,7 +27,7 @@ namespace ModernStaggerLock
 	RE::BSString GetSpeicalStaggerNameCondition::GetArgument() const
 	{
 		const auto textArgument = textComponent->GetTextValue();
-		return std::format("{}(hash:{})", textArgument.data(), HashToInt(textArgument.data(), textArgument.size())).data();
+		return std::format("{}(hash:{})", textArgument.data(), HashSpecialStaggerID(textArgument.data(), textArgument.size())).data();
 	}
 
 	RE::BSString GetSpeicalStaggerNameCondition::GetCurrent(RE::TESObjectREFR* a_refr) const

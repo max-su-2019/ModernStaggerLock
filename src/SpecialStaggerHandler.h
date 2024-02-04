@@ -9,6 +9,8 @@ namespace ModernStaggerLock
 	using namespace DKUtil::Alias;
 	using json = nlohmann::json;
 
+	constexpr int32_t HashSpecialStaggerID(const char* data, size_t const size) noexcept;
+
 	class SpecialStaggerHandler : public DKUtil::model::Singleton<SpecialStaggerHandler>
 	{
 		friend DKUtil::model::Singleton<SpecialStaggerHandler>;
@@ -28,23 +30,30 @@ namespace ModernStaggerLock
 			bool ignoreStaggerLevel = false;
 		};
 
-		using SpecailStaggerTargetMap = std::unordered_map<RE::Actor*, SpecialStaggerData>;
+		struct SpecialStaggerTransactionData
+		{
+			std::string animName = "";
+			bool Unrestricted = false;
+			std::set<std::int32_t> transAnimList = {};
+		};
+
+		using SpecialStaggerTargetMap = std::unordered_map<RE::Actor*, SpecialStaggerData>;
+		using SpecialStaggerTransMap = std::unordered_map<std::int32_t, SpecialStaggerTransactionData>;
 
 		SpecialStaggerHandler() = default;
 
-		static PRECISION_API::PreHitCallbackReturn precisionPreHitCallbackFunc(const PRECISION_API::PrecisionHitData& a_precisionHitData);
-
-		void EraseStaggerDataFromMap(RE::Actor* a_actor);
 		bool FindSpecialStaggerData(RE::Actor* a_actor, SpecialStaggerData& a_data);
 		void ProcessSpeicalStagger(RE::Actor* a_actor, std::int32_t a_StaggerLevel);
 
+		SpecialStaggerTransMap transDataMap;
+
 	private:
 		static bool ParseSpecialStaggerData(const std::string_view a_string, SpecialStaggerData& a_data);
-
-		SpecailStaggerTargetMap targets;
-		mutable std::mutex m_mutex;
+		bool CanTriggerTransaction(const std::int32_t a_curAnimID, const std::int32_t a_NextAnimID) const;
 	};
 	using SpecialStaggerData = SpecialStaggerHandler::SpecialStaggerData;
+	using SpecialStaggerTransactionData = SpecialStaggerHandler::SpecialStaggerTransactionData;
 
 	void from_json(const json& j, SpecialStaggerData& a_data);
+	void from_json(const json& j, SpecialStaggerTransactionData& a_data);
 }

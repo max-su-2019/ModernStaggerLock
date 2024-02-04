@@ -1,43 +1,48 @@
 #include "SpecialStaggerHandler.h"
+#include "Settings.h"
 #include "Utils.h"
 
 namespace ModernStaggerLock
 {
-	PRECISION_API::PreHitCallbackReturn SpecialStaggerHandler::precisionPreHitCallbackFunc(const PRECISION_API::PrecisionHitData& a_precisionHitData)
+	constexpr int32_t HashSpecialStaggerID(const char* data, size_t const size) noexcept
 	{
-		auto specialStaggerHandler = SpecialStaggerHandler::GetSingleton();
-		auto actor = a_precisionHitData.target ? a_precisionHitData.target->As<RE::Actor>() : nullptr;
-		if (actor) {
-			auto it = a_precisionHitData.extraDataMap.find(Plugin::NAME.data());
-			if (it != a_precisionHitData.extraDataMap.end()) {
-				SpecialStaggerData data;
-				if (ParseSpecialStaggerData(it->second, data)) {
-					std::scoped_lock lock(specialStaggerHandler->m_mutex);
-					specialStaggerHandler->targets.emplace(actor, data);
-				}
-			}
-		}
+		int32_t hash = 5381;
 
-		PRECISION_API::PreHitCallbackReturn ret;
-		ret.modifiers = {};
-		return ret;
+		for (const char* c = data; c < data + size; ++c)
+			hash = ((hash << 5) + hash) + charToLower(*c);
+
+		return hash;
 	}
 
-	void SpecialStaggerHandler::EraseStaggerDataFromMap(RE::Actor* a_actor)
+	bool SpecialStaggerHandler::ParseSpecialStaggerData(const std::string_view a_string, SpecialStaggerData& a_data)
 	{
-		std::scoped_lock lock(m_mutex);
-		if (targets.contains(a_actor)) {
-			targets.erase(a_actor);
+		try {
+			auto j = json::parse(a_string);
+			a_data = j.get<SpecialStaggerData>();
+			return true;
+		} catch (const json::exception&) {
+			return false;
 		}
+
+		return false;
 	}
 
 	bool SpecialStaggerHandler::FindSpecialStaggerData(RE::Actor* a_actor, SpecialStaggerData& a_data)
 	{
-		std::scoped_lock lock(m_mutex);
-		auto it = targets.find(a_actor);
-		if (it != targets.end()) {
-			a_data = it->second;
-			return true;
+		if (!a_actor) {
+			return false;
+		}
+
+		if (!MSLSettings::ersh_Precision) {
+			return false;
+		}
+
+		auto precisionHitData = MSLSettings::ersh_Precision->GetCachedHitData(static_cast<RE::TESObjectREFR*>(a_actor)->GetHandle());
+		if (precisionHitData) {
+			auto it = precisionHitData->extraDataMap.find(Plugin::NAME.data());
+			if (it != precisionHitData->extraDataMap.end()) {
+				return ParseSpecialStaggerData(it->second, a_data);
+			}
 		}
 
 		return false;
@@ -58,21 +63,30 @@ namespace ModernStaggerLock
 			}
 
 			std::int32_t curSpecialStaggerId = 0;
-			if (a_actor->GetGraphVariableInt("msl_specialStaggerId", curSpecialStaggerId) && (curSpecialStaggerId == 0 || curSpecialStaggerId == nextSpecialStaggerId)) {
+			if (a_actor->GetGraphVariableInt("msl_specialStaggerId", curSpecialStaggerId) && CanTriggerTransaction(curSpecialStaggerId, nextSpecialStaggerId)) {
 				a_actor->SetGraphVariableInt("msl_staggerLevel", 5);
 				a_actor->SetGraphVariableInt("msl_specialStaggerId", nextSpecialStaggerId);
 			}
 		}
 	}
 
-	bool SpecialStaggerHandler::ParseSpecialStaggerData(const std::string_view a_string, SpecialStaggerData& a_data)
+	bool SpecialStaggerHandler::CanTriggerTransaction(const std::int32_t a_curAnimID, const std::int32_t a_NextAnimID) const
 	{
-		try {
-			auto j = json::parse(a_string);
-			a_data = j.get<SpecialStaggerData>();
+		if (a_curAnimID == 0 || a_curAnimID == a_NextAnimID) {
+			DEBUG("Return True");
 			return true;
-		} catch (const json::exception&) {
-			return false;
+		}
+
+		auto it = transDataMap.find(a_curAnimID);
+		if (it != transDataMap.end()) {
+			auto transData = it->second;
+			if (transData.Unrestricted) {
+				DEBUG("Return Unrestricted True");
+				return true;
+			} else {
+				DEBUG("Return List");
+				return transData.transAnimList.find(a_NextAnimID) != transData.transAnimList.end();
+			}
 		}
 
 		return false;
@@ -80,7 +94,7 @@ namespace ModernStaggerLock
 
 	constexpr std::uint32_t SpecialStaggerHandler::SpecialStaggerData::GetNameHash() noexcept
 	{
-		return animName.length() > 0 ? HashToInt(animName.data(), animName.size()) : 0;
+		return animName.length() > 0 ? HashSpecialStaggerID(animName.data(), animName.size()) : 0;
 	}
 
 	void from_json(const json& j, SpecialStaggerData& a_data)
@@ -89,6 +103,19 @@ namespace ModernStaggerLock
 
 		if (j.find("IgnoreStaggerLevel") != j.end()) {
 			j.at("IgnoreStaggerLevel").get_to(a_data.ignoreStaggerLevel);
+		}
+	}
+
+	void from_json(const json& j, SpecialStaggerTransactionData& a_data)
+	{
+		j.at("AnimName").get_to(a_data.animName);
+		j.at("Unrestricted").get_to(a_data.Unrestricted);
+		if (!a_data.Unrestricted) {
+			std::vector<std::string> animNames;
+			j.at("TransAnimList").get_to(animNames);
+			for (auto const& animName : animNames) {
+				a_data.transAnimList.emplace(HashSpecialStaggerID(animName.data(), animName.size()));
+			}
 		}
 	}
 

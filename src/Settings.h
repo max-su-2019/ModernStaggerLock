@@ -1,6 +1,7 @@
 #pragma once
 #include "DKUtil/Config.hpp"
 #include "DKUtil/Utility.hpp"
+#include "PrecisionAPI.h"
 
 namespace ModernStaggerLock
 {
@@ -36,6 +37,8 @@ namespace ModernStaggerLock
 			kTotal
 		};
 
-		std::vector<std::string> quickRecoveryEvents;
+		static inline std::vector<std::string> quickRecoveryEvents = {};
+
+		static inline PRECISION_API::IVPrecision5* ersh_Precision = nullptr;
 	};
 }

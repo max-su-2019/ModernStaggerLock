@@ -112,7 +112,7 @@ namespace PRECISION_API
 		RE::hkpShapeKey hitBodyShapeKey;
 		RE::hkpShapeKey hittingBodyShapeKey;
 
-		ExtraDataCollections extraDataMap;
+		ExtraDataCollections extraDataMap = {};
 	};
 
 	enum class CollisionFilterComparisonResult : uint8_t
@@ -379,7 +379,9 @@ namespace PRECISION_API
 		/// </summary>
 		/// <param name="a_name">Name of your custom parameter key</param>
 		/// <returns>OK, NotRegistered</returns>
-		virtual APIResult AddExtraParameterName(const std::string_view a_name);
+		virtual APIResult AddExtraParameterName(const std::string_view a_name) noexcept = 0;
+
+		virtual std::shared_ptr<PrecisionHitData> GetCachedHitData(RE::ObjectRefHandle a_refHandle) noexcept = 0;
 	};
 
 	typedef void* (*_RequestPluginAPI)(const InterfaceVersion interfaceVersion);

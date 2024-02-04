@@ -7,14 +7,9 @@
 
 namespace ModernStaggerLock
 {
-	PRECISION_API::IVPrecision5* ersh_Precision = nullptr;
-
 	void EventCallback(SKSE::MessagingInterface::Message* msg)
 	{
 		if (msg->type == SKSE::MessagingInterface::kPostLoad) {
-			ModernStaggerLock::ActorUpdateHook::PlayerEx::InstallHook();
-			ModernStaggerLock::ActorUpdateHook::CharacterEx::InstallHook();
-
 			ModernStaggerLock::AnimEventHook::InstallHook();
 
 			ModernStaggerLock::StaggeredStateCheckPatch::Install();
@@ -24,14 +19,13 @@ namespace ModernStaggerLock
 
 			ModernStaggerLock::DisableStaggerJumpHook::InstallHook();
 
-			MSLSettings::GetSingleton();
+			MSLSettings::ersh_Precision = reinterpret_cast<PRECISION_API::IVPrecision5*>(PRECISION_API::RequestPluginAPI(PRECISION_API::InterfaceVersion::V5));
+			if (MSLSettings::ersh_Precision) {
+				//	auto res = ersh_Precision->AddPreHitCallback(SKSE::GetPluginHandle(), SpecialStaggerHandler::precisionPreHitCallbackFunc);
+				//	if (res == PRECISION_API::APIResult::OK || res == PRECISION_API::APIResult::AlreadyRegistered)
+				//		INFO("Collision prehit callback successfully registered.");
 
-			ersh_Precision = reinterpret_cast<PRECISION_API::IVPrecision5*>(PRECISION_API::RequestPluginAPI(PRECISION_API::InterfaceVersion::V5));
-			if (ersh_Precision) {
-				auto res = ersh_Precision->AddPreHitCallback(SKSE::GetPluginHandle(), SpecialStaggerHandler::precisionPreHitCallbackFunc);
-				if (res == PRECISION_API::APIResult::OK || res == PRECISION_API::APIResult::AlreadyRegistered)
-					INFO("Collision prehit callback successfully registered.");
-				res = ersh_Precision->AddExtraParameterName(Plugin::NAME);
+				auto res = MSLSettings::ersh_Precision->AddExtraParameterName(Plugin::NAME);
 				if (res == PRECISION_API::APIResult::OK || res == PRECISION_API::APIResult::AlreadyRegistered)
 					INFO("AddExtraParameterName successfully registered.");
 			}
@@ -42,6 +36,8 @@ namespace ModernStaggerLock
 			} else {
 				ERROR("Failed to request Open Animation Replacer API"sv);
 			}
+		} else if (msg->type == SKSE::MessagingInterface::kDataLoaded) {
+			MSLSettings::GetSingleton();
 		}
 	}
 
