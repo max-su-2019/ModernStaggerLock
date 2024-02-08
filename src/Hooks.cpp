@@ -181,4 +181,50 @@ namespace ModernStaggerLock
 		return _ProcessEvent(a_sink, a_event, a_eventSource);
 	}
 
+	void ActorUpdateHook::CharacterEx::Hook_Update(float a_delta)
+	{
+		func(this, a_delta);
+
+		auto charCtrl = GetCharController();
+		if (charCtrl) {
+			auto charState = static_cast<std::int32_t>(charCtrl->context.currentState);
+			SetGraphVariableInt("msl_CharacterStateType", charState);
+		}
+	}
+
+	void ActorUpdateHook::PlayerEx::Hook_Update(float a_delta)
+	{
+		func(this, a_delta);
+
+		auto charCtrl = GetCharController();
+		if (charCtrl) {
+			auto charState = static_cast<std::int32_t>(charCtrl->context.currentState);
+			SetGraphVariableInt("msl_CharacterStateType", charState);
+		}
+	}
+
+	bool PerformLandActionHook_NPC::PerformLandAction(RE::TESActionData* a_data)
+	{
+		if (a_data && a_data->source && a_data->action && _strcmpi(a_data->action->GetFormEditorID(), "ActionLand") == 0) {
+			bool IsSpecialStaggerFalling = false;
+			if (a_data->source->GetGraphVariableBool("msl_IsSpecialStaggerFalling", IsSpecialStaggerFalling) && IsSpecialStaggerFalling) {
+				a_data->animEvent = "MSL_SpecialStaggerLandStart";
+			}
+		}
+
+		return _PerformAction(a_data);
+	}
+
+	bool PerformLandActionHook_PC::PerformLandAction(RE::TESActionData* a_data)
+	{
+		if (a_data && a_data->source && a_data->action && _strcmpi(a_data->action->GetFormEditorID(), "ActionLand") == 0) {
+			bool IsSpecialStaggerFalling = false;
+			if (a_data->source->GetGraphVariableBool("msl_IsSpecialStaggerFalling", IsSpecialStaggerFalling) && IsSpecialStaggerFalling) {
+				a_data->animEvent = "MSL_SpecialStaggerLandStart";
+			}
+		}
+
+		return _PerformAction(a_data);
+	}
+
 }

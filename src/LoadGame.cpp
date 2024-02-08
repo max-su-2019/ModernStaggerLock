@@ -10,14 +10,20 @@ namespace ModernStaggerLock
 	void EventCallback(SKSE::MessagingInterface::Message* msg)
 	{
 		if (msg->type == SKSE::MessagingInterface::kPostLoad) {
-			ModernStaggerLock::AnimEventHook::InstallHook();
+			ActorUpdateHook::CharacterEx::InstallHook();
+			ActorUpdateHook::PlayerEx::InstallHook();
 
-			ModernStaggerLock::StaggeredStateCheckPatch::Install();
+			PerformLandActionHook_NPC::InstallHook();
+			PerformLandActionHook_PC::InstallHook();
 
-			ModernStaggerLock::NotifyAnimationGraphHook::CharacterEx::InstallHook();
-			ModernStaggerLock::NotifyAnimationGraphHook::PlayerEx::InstallHook();
+			AnimEventHook::InstallHook();
 
-			ModernStaggerLock::DisableStaggerJumpHook::InstallHook();
+			StaggeredStateCheckPatch::Install();
+
+			NotifyAnimationGraphHook::CharacterEx::InstallHook();
+			NotifyAnimationGraphHook::PlayerEx::InstallHook();
+
+			DisableStaggerJumpHook::InstallHook();
 
 			MSLSettings::ersh_Precision = reinterpret_cast<PRECISION_API::IVPrecision5*>(PRECISION_API::RequestPluginAPI(PRECISION_API::InterfaceVersion::V5));
 			if (MSLSettings::ersh_Precision) {
@@ -32,7 +38,7 @@ namespace ModernStaggerLock
 
 			OAR_API::Conditions::GetAPI(OAR_API::Conditions::InterfaceVersion::V2);
 			if (g_oarConditionsInterface) {
-				RegisterCondition<ModernStaggerLock::GetSpeicalStaggerNameCondition>();
+				RegisterCondition<GetSpeicalStaggerNameCondition>();
 			} else {
 				ERROR("Failed to request Open Animation Replacer API"sv);
 			}
