@@ -31,7 +31,7 @@ namespace ModernStaggerLock
 				//	if (res == PRECISION_API::APIResult::OK || res == PRECISION_API::APIResult::AlreadyRegistered)
 				//		INFO("Collision prehit callback successfully registered.");
 
-				auto res = MSLSettings::ersh_Precision->AddExtraParameterName(Plugin::NAME);
+				auto res = MSLSettings::ersh_Precision->AddExtraParameterName(Plugin::NAME.data());
 				if (res == PRECISION_API::APIResult::OK || res == PRECISION_API::APIResult::AlreadyRegistered)
 					INFO("AddExtraParameterName successfully registered.");
 			}

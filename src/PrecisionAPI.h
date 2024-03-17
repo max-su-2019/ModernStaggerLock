@@ -14,7 +14,7 @@ namespace PRECISION_API
 		V2,
 		V3,
 		V4,
-		V5
+		V5,
 	};
 
 	// Error types that may be returned by Precision
@@ -89,15 +89,12 @@ namespace PRECISION_API
 
 	struct PrecisionHitData
 	{
-		using ExtraDataCollections = std::unordered_map<std::string, std::string>;
-
+		constexpr PrecisionHitData() = default;
 		PrecisionHitData(RE::Actor* a_attacker, RE::TESObjectREFR* a_target, RE::hkpRigidBody* a_hitRigidBody, RE::hkpRigidBody* a_hittingRigidBody, const RE::NiPoint3& a_hitPos,
-			const RE::NiPoint3& a_separatingNormal, const RE::NiPoint3& a_hitPointVelocity, RE::hkpShapeKey a_hitBodyShapeKey, RE::hkpShapeKey a_hittingBodyShapeKey,
-			const ExtraDataCollections& a_extraDataMap) :
+			const RE::NiPoint3& a_separatingNormal, const RE::NiPoint3& a_hitPointVelocity, RE::hkpShapeKey a_hitBodyShapeKey, RE::hkpShapeKey a_hittingBodyShapeKey) :
 			attacker(a_attacker),
 			target(a_target), hitRigidBody(a_hitRigidBody), hittingRigidBody(a_hittingRigidBody), hitPos(a_hitPos), separatingNormal(a_separatingNormal),
-			hitPointVelocity(a_hitPointVelocity), hitBodyShapeKey(a_hitBodyShapeKey), hittingBodyShapeKey(a_hittingBodyShapeKey),
-			extraDataMap(a_extraDataMap)
+			hitPointVelocity(a_hitPointVelocity), hitBodyShapeKey(a_hitBodyShapeKey), hittingBodyShapeKey(a_hittingBodyShapeKey)
 		{}
 
 		RE::Actor* attacker;
@@ -111,8 +108,6 @@ namespace PRECISION_API
 
 		RE::hkpShapeKey hitBodyShapeKey;
 		RE::hkpShapeKey hittingBodyShapeKey;
-
-		ExtraDataCollections extraDataMap = {};
 	};
 
 	enum class CollisionFilterComparisonResult : uint8_t
@@ -379,9 +374,30 @@ namespace PRECISION_API
 		/// </summary>
 		/// <param name="a_name">Name of your custom parameter key</param>
 		/// <returns>OK, NotRegistered</returns>
-		virtual APIResult AddExtraParameterName(const std::string_view a_name) noexcept = 0;
+		virtual APIResult AddExtraParameterName(const char* a_name) noexcept = 0;
 
-		virtual std::shared_ptr<PrecisionHitData> GetCachedHitData(RE::ObjectRefHandle a_refHandle) noexcept = 0;
+		/// <summary>
+		/// Get cached PrecisionHitData from target actor.
+		/// </summary>
+		/// <param name="a_refHandle">Target actor handle</param>
+		/// <returns>PrecisionHitData*, or nullptr</returns>
+		virtual PrecisionHitData* GetCachedHitData(RE::ObjectRefHandle a_refHandle) noexcept = 0;
+
+		/// <summary>
+		/// Get key-value from cached extra data map of target actor.
+		/// </summary>
+		/// <param name="a_refHandle">Target actor handle</param>
+		/// <param name="a_key">String key</param>
+		/// <returns>String value, or nullptr</returns>
+		virtual const char* GetCachedExtraData(RE::ObjectRefHandle a_refHandle, const char* a_key) noexcept = 0;
+
+		/// <summary>
+		/// Get key-value from cached extra data map of corresponding PrecisionHitData.
+		/// </summary>
+		/// <param name="a_hitData">Pointer of PrecisionHitData that's valid</param>
+		/// <param name="a_key">String key</param>
+		/// <returns>String value, or nullptr</returns>
+		virtual const char* GetCachedExtraData(PrecisionHitData* a_hitData, const char* a_key) noexcept = 0;
 	};
 
 	typedef void* (*_RequestPluginAPI)(const InterfaceVersion interfaceVersion);
@@ -392,7 +408,7 @@ namespace PRECISION_API
 	/// </summary>
 	/// <param name="a_interfaceVersion">The interface version to request</param>
 	/// <returns>The pointer to the API singleton, or nullptr if request failed</returns>
-	[[nodiscard]] inline void* RequestPluginAPI(const InterfaceVersion a_interfaceVersion = InterfaceVersion::V4)
+	[[nodiscard]] inline void* RequestPluginAPI(const InterfaceVersion a_interfaceVersion = InterfaceVersion::V5)
 	{
 		auto pluginHandle = GetModuleHandle("Precision.dll");
 		_RequestPluginAPI requestAPIFunction = (_RequestPluginAPI)SKSE::WinAPI::GetProcAddress(pluginHandle, "RequestPluginAPI");

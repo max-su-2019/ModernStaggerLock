@@ -37,12 +37,9 @@ namespace ModernStaggerLock
 			return false;
 		}
 
-		auto precisionHitData = MSLSettings::ersh_Precision->GetCachedHitData(static_cast<RE::TESObjectREFR*>(a_actor)->GetHandle());
-		if (precisionHitData) {
-			auto it = precisionHitData->extraDataMap.find(Plugin::NAME.data());
-			if (it != precisionHitData->extraDataMap.end()) {
-				return ParseSpecialStaggerData(it->second, a_data);
-			}
+		auto extraData = MSLSettings::ersh_Precision->GetCachedExtraData(static_cast<RE::TESObjectREFR*>(a_actor)->GetHandle(), Plugin::NAME.data());
+		if (extraData) {
+			return ParseSpecialStaggerData(extraData, a_data);
 		}
 
 		return false;
